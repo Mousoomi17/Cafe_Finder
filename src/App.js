@@ -2,18 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Coffee, Heart, RotateCcw, X, MapPin, Star, Clock } from 'lucide-react';
 
 // --- CONFIGURATION ---
-const GOOGLE_API_KEY = "AIzaSyDMHRI51feeefAw7YASxuw357t_zI8zpso"; 
-const USE_MOCK_DATA = false; 
-
-// --- MOCK DATA ---
-const MOCK_CAFES = [
-  { id: 1, name: "The Daily Grind", rating: 4.8, open_now: true, photo: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80" },
-  { id: 2, name: "Espresso Lab", rating: 4.5, open_now: true, photo: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&q=80" },
-  { id: 3, name: "Bean & Leaf", rating: 4.2, open_now: false, photo: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=600&q=80" },
-  { id: 4, name: "Morning Brew", rating: 4.9, open_now: true, photo: "https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=600&q=80" },
-  { id: 5, name: "Code & Coffee", rating: 5.0, open_now: true, photo: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80" }
-];
-
 // 1. Swipeable Card Component
 const SwipeableCard = ({ data, onSwipe, style, isTop }) => {
   const cardRef = useRef(null);
@@ -77,23 +65,23 @@ const SwipeableCard = ({ data, onSwipe, style, isTop }) => {
       onTouchStart={handlePointerDown}
       onTouchMove={handlePointerMove}
       onTouchEnd={handlePointerUp}
-      className={`absolute w-full h-full bg-white rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing touch-none select-none ${isTop ? 'z-50' : ''}`}
-      style={{ ...style, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', transform: style?.transform || 'translateZ(0)' }}
+      className={`absolute w-full h-full bg-gradient-to-br from-white to-gray-50 rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing touch-none select-none ${isTop ? 'z-50' : ''}`}
+      style={{ ...style, boxShadow: '0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.05)', transform: style?.transform || 'translateZ(0)' }}
     >
-      <div className="relative h-64 bg-gray-200 pointer-events-none">
+      <div className="relative h-[65%] bg-gray-200 pointer-events-none">
         <img 
           src={data.photo} 
           alt={data.name}
           className="w-full h-full object-cover"
           draggable="false"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-        <div className="absolute bottom-4 left-4 right-4 text-white">
-          <h2 className="text-2xl font-bold drop-shadow-lg">{data.name}</h2>
+        <div className="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-black/60 to-transparent"></div>
+        <div className="absolute bottom-4 left-4 text-white">
+          <h2 className="text-2xl font-bold drop-shadow-md">{data.name}</h2>
         </div>
       </div>
       
-      <div className="p-6 pointer-events-none">
+      <div className="p-6 pointer-events-none h-[35%] flex flex-col justify-center">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-1 bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-semibold">
             <Star size={16} fill="currentColor" />
@@ -134,24 +122,10 @@ const SwipeableCard = ({ data, onSwipe, style, isTop }) => {
 
 // 2. Saved List Component
 const SavedList = ({ isOpen, onClose, items, onRemove }) => {
-  const handleCafeClick = (cafe, e) => {
-    if (e.target.closest('.remove-btn') || e.target.closest('.map-icon')) return;
-    if (cafe.id) {
-      window.open(`https://www.google.com/maps/place/?q=place_id:${cafe.id}`, '_blank');
-    } else {
-      const searchQuery = encodeURIComponent(cafe.name);
-      window.open(`https://www.google.com/maps/search/?api=1&query=${searchQuery}`, '_blank');
-    }
-  };
-
   const handleMapClick = (cafe, e) => {
     e.stopPropagation();
-    if (cafe.id) {
-      window.open(`https://www.google.com/maps/place/?q=place_id:${cafe.id}`, '_blank');
-    } else {
-      const searchQuery = encodeURIComponent(cafe.name);
-      window.open(`https://www.google.com/maps/search/?api=1&query=${searchQuery}`, '_blank');
-    }
+    const searchQuery = encodeURIComponent(cafe.name + ' cafe');
+    window.open(`https://www.google.com/maps/search/?api=1&query=${searchQuery}`, '_blank');
   };
 
   return (
@@ -179,9 +153,8 @@ const SavedList = ({ isOpen, onClose, items, onRemove }) => {
           ) : (
             items.map((cafe) => (
               <div 
-                key={cafe.id} 
-                onClick={(e) => handleCafeClick(cafe, e)}
-                className="group relative flex items-center gap-4 p-4 bg-white border-2 border-gray-100 rounded-2xl shadow-lg hover:shadow-2xl transition-all cursor-pointer hover:scale-[1.02] hover:border-purple-200"
+                key={cafe.id}
+                className="group relative flex items-center gap-4 p-4 bg-white border-2 border-gray-100 rounded-2xl shadow-lg hover:shadow-2xl transition-all hover:border-purple-200"
               >
                 <img src={cafe.photo} alt={cafe.name} className="w-20 h-20 rounded-xl object-cover bg-gray-200 flex-shrink-0 shadow-md" />
                 <div className="flex-1 min-w-0">
@@ -193,7 +166,7 @@ const SavedList = ({ isOpen, onClose, items, onRemove }) => {
                     </div>
                     <button
                       onClick={(e) => handleMapClick(cafe, e)}
-                      className="map-icon flex items-center bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs font-semibold hover:bg-blue-200 transition-colors"
+                      className="flex items-center bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs font-semibold hover:bg-blue-200 transition-colors"
                     >
                       <MapPin size={12} className="mr-1" />
                       Map
@@ -205,7 +178,7 @@ const SavedList = ({ isOpen, onClose, items, onRemove }) => {
                     e.stopPropagation();
                     onRemove(cafe.id);
                   }}
-                  className="remove-btn p-2 bg-red-50 rounded-full hover:bg-red-100 transition-all hover:scale-110 shadow-md"
+                  className="p-2 bg-red-50 rounded-full hover:bg-red-100 transition-all hover:scale-110 shadow-md"
                 >
                   <X size={20} className="text-red-500" />
                 </button>
@@ -235,15 +208,8 @@ const App = () => {
 
   const loadCafes = async () => {
     setLoading(true);
-    if (USE_MOCK_DATA) {
-      setTimeout(() => {
-        setCafes([...MOCK_CAFES]);
-        setLoading(false);
-      }, 800);
-    } else {
-      await fetchNearbyCafes();
-      setLoading(false);
-    }
+    await fetchNearbyCafes();
+    setLoading(false);
   };
 
   // Helper to format raw API results into our Card format
@@ -253,9 +219,9 @@ const App = () => {
       name: place.name,
       rating: place.rating,
       open_now: place.opening_hours?.open_now,
-      // We still build the photo URL on client side because it works inside <img> tags
-      photo: place.photos
-        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${GOOGLE_API_KEY}`
+      // UPDATE: Use your new API proxy instead of the hardcoded URL
+      photo: (place.photos && place.photos.length > 0)
+        ? `/api/photo?ref=${place.photos[0].photo_reference}`
         : "https://via.placeholder.com/400x300?text=No+Image"
     }));
   };
@@ -280,26 +246,9 @@ const App = () => {
       console.warn("Backend API failed (expected if running locally/preview), trying proxy...", err.message);
     }
 
-    // 2. Try CORS Proxy (Fallback for local dev)
-    try {
-       const endpoint = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=1500&type=cafe&key=${GOOGLE_API_KEY}`;
-       const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-       const response = await fetch(proxyUrl + endpoint);
-       
-       if (response.ok) {
-          const data = await response.json();
-          if (data.results) {
-              setCafes(formatCafes(data.results));
-              return;
-          }
-       }
-    } catch (err) {
-       console.warn("Proxy failed, falling back to mock data.", err.message);
-    }
-
-    // 3. Fallback to Mock Data (Safe net)
-    console.log("Using Mock Data as fallback");
-    setCafes([...MOCK_CAFES]);
+    // 2. Show error message
+    console.error("Failed to fetch cafes from API");
+    alert("Unable to load cafes. Please check your connection and try again.");
   };
 
   const fetchNearbyCafes = async () => {
@@ -324,8 +273,8 @@ const App = () => {
         },
         (err) => {
           console.error("Geolocation error:", err.message);
-          alert("Location access denied or unavailable. Loading demo data.");
-          setCafes([...MOCK_CAFES]);
+          alert("Location access denied or unavailable. Please enable location services.");
+          setLoading(false);
         }
       );
     }
@@ -350,22 +299,26 @@ const App = () => {
   };
 
   return (
-    <div className="relative min-h-screen min-h-[100dvh] bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex flex-col overflow-hidden font-sans text-gray-800">
+    <div className="relative min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex flex-col overflow-hidden font-sans text-gray-800">
       
       {/* Header */}
-      <header className="pt-8 pb-4 text-center z-10 px-4">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <div className="p-2 bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl shadow-lg">
-            <Coffee className="text-white" size={28} />
+      <header className="pt-8 pb-4 text-center z-10 px-4 flex-none">
+        <div className="flex items-center justify-center gap-3 mb-2 animate-fade-in">
+          <div className="p-3 bg-gradient-to-br from-red-500 via-pink-500 to-rose-500 rounded-2xl shadow-2xl animate-bounce-slow" style={{boxShadow: '0 10px 30px rgba(236,72,153,0.4)'}}>
+            <Coffee className="text-white animate-pulse" size={32} />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Cafe Finder</h1>
+          <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-purple-600 via-pink-500 to-red-500 bg-clip-text text-transparent animate-gradient" style={{textShadow: '0 4px 20px rgba(168,85,247,0.3)'}}>
+            Cafe Finder
+          </h1>
         </div>
-        <p className="text-gray-500 text-sm font-medium">Find your next brew ☕</p>
+        <p className="text-gray-600 text-base sm:text-lg font-semibold mt-1 animate-fade-in-delay">Find your next brew</p>
       </header>
 
-      {/* Main Card Stack Area */}
-      <main className={`flex-1 flex flex-col items-center justify-center relative overflow-hidden ${showSaved ? 'hidden' : ''}`}>
-        <div className="relative w-full max-w-sm h-[450px] sm:h-[480px] px-4 mb-4">
+      {/* Main Content Area (Centers content vertically) */}
+      <main className={`flex-1 flex flex-col items-center justify-center gap-6 w-full px-4 pb-4 ${showSaved ? 'hidden' : ''}`}>
+        
+        {/* Card Stack */}
+        <div className="relative w-full max-w-sm h-[60vh] max-h-[550px] min-h-[400px]">
           
           {loading && (
             <div className="absolute inset-0 flex items-center justify-center z-0">
@@ -409,47 +362,48 @@ const App = () => {
             );
           })}
         </div>
-      </main>
 
-      {/* Control Bar */}
-      <div className={`pb-safe pb-6 sm:pb-8 px-4 w-full max-w-sm mx-auto z-50 ${showSaved ? 'hidden' : ''}`}>
-        <div className="flex justify-between items-center bg-white rounded-3xl shadow-xl p-2 sm:p-3 border border-gray-100">
-          <button 
-            onClick={loadCafes}
-            className="p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 hover:scale-110 active:scale-95 transition-transform shadow-lg"
-          >
-            <RotateCcw size={20} className="sm:w-[22px] sm:h-[22px]" />
-          </button>
-          
-          <button 
-            onClick={() => {
-                if(cafes.length > 0) handleSwipe('left', cafes[0]);
-            }}
-            className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-red-400 to-red-500 text-white hover:scale-110 active:scale-95 transition-transform shadow-lg"
-          >
-            <X size={24} className="sm:w-[28px] sm:h-[28px]" />
-          </button>
+        {/* Control Bar (Now part of the centered flex column) */}
+        <div className="w-full max-w-md z-50">
+          <div className="flex justify-between items-center bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-3 border border-white/50" style={{boxShadow: '0 10px 40px rgba(0,0,0,0.15)'}}>
+            <button 
+              onClick={loadCafes}
+              className="p-4 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 hover:scale-110 transition-transform shadow-lg hover:shadow-xl"
+            >
+              <RotateCcw size={22} />
+            </button>
+            
+            <button 
+              onClick={() => {
+                  if(cafes.length > 0) handleSwipe('left', cafes[0]);
+              }}
+              className="p-5 rounded-2xl bg-gradient-to-br from-red-400 to-red-500 text-white hover:scale-110 transition-transform shadow-lg hover:shadow-xl"
+            >
+              <X size={28} />
+            </button>
 
-          <button 
-             onClick={() => {
-                if(cafes.length > 0) handleSwipe('right', cafes[0]);
-            }}
-            className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-green-400 to-green-500 text-white hover:scale-110 active:scale-95 transition-transform shadow-lg"
-          >
-            <Heart size={24} className="sm:w-[28px] sm:h-[28px]" fill="currentColor" />
-          </button>
-          
-          <button 
-            onClick={() => setShowSaved(true)}
-            className="relative p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-500 text-white hover:scale-110 active:scale-95 transition-transform shadow-lg"
-          >
-            <Star size={20} className="sm:w-[22px] sm:h-[22px]" fill={savedCafes.length > 0 ? "currentColor" : "none"} />
-            {savedCafes.length > 0 && (
-              <span className="absolute top-1 right-1 sm:top-2 sm:right-2 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full border-2 border-white"></span>
-            )}
-          </button>
+            <button 
+              onClick={() => {
+                  if(cafes.length > 0) handleSwipe('right', cafes[0]);
+              }}
+              className="p-5 rounded-2xl bg-gradient-to-br from-green-400 to-green-500 text-white hover:scale-110 transition-transform shadow-lg hover:shadow-xl"
+            >
+              <Heart size={28} fill="currentColor" />
+            </button>
+            
+            <button 
+              onClick={() => setShowSaved(true)}
+              className="relative p-4 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-500 text-white hover:scale-110 transition-transform shadow-lg hover:shadow-xl"
+            >
+              <Star size={22} fill={savedCafes.length > 0 ? "currentColor" : "none"} />
+              {savedCafes.length > 0 && (
+                <span className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+
+      </main>
 
       {/* Saved List Overlay */}
       <SavedList 
@@ -462,6 +416,38 @@ const App = () => {
       {/* Global Style overrides */}
       <style>{`
         .swipe-hint-right, .swipe-hint-left { opacity: 0; }
+        
+        @keyframes gradient {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
+        }
+        
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-gradient {
+          background-size: 200% 200%;
+          animation: gradient 3s ease infinite;
+        }
+        
+        .animate-bounce-slow {
+          animation: bounce-slow 2s ease-in-out infinite;
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.6s ease-out;
+        }
+        
+        .animate-fade-in-delay {
+          animation: fade-in 0.8s ease-out 0.2s both;
+        }
       `}</style>
     </div>
   );
