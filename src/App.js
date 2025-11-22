@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Coffee, Heart, RotateCcw, X, MapPin, Star, Clock } from 'lucide-react';
 
 // --- CONFIGURATION ---
-const USE_MOCK_DATA = true;
-const GOOGLE_API_KEY = "YOUR_API_KEY_HERE"; 
+const USE_MOCK_DATA = false; 
 
 // --- MOCK DATA ---
 const MOCK_CAFES = [
@@ -14,10 +13,7 @@ const MOCK_CAFES = [
   { id: 5, name: "Code & Coffee", rating: 5.0, open_now: true, photo: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80" }
 ];
 
-// --- COMPONENTS ---
-
 // 1. Swipeable Card Component
-// Handles the physics of dragging, rotating, and dismissing cards
 const SwipeableCard = ({ data, onSwipe, style, isTop }) => {
   const cardRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -26,58 +22,62 @@ const SwipeableCard = ({ data, onSwipe, style, isTop }) => {
   const handlePointerDown = (e) => {
     if (!isTop) return;
     setIsDragging(true);
-    startPos.current = { x: e.clientX, y: e.clientY };
-    e.target.setPointerCapture(e.pointerId);
+    startPos.current = { x: e.clientX || e.touches?.[0]?.clientX, y: e.clientY || e.touches?.[0]?.clientY };
     if (cardRef.current) cardRef.current.style.transition = 'none';
   };
 
   const handlePointerMove = (e) => {
     if (!isDragging || !isTop || !cardRef.current) return;
+    if (e.cancelable) e.preventDefault();
     
-    const deltaX = e.clientX - startPos.current.x;
-    const rotate = deltaX * 0.05; // 5% rotation based on X movement
+    const clientX = e.clientX || e.touches?.[0]?.clientX;
+    const deltaX = clientX - startPos.current.x;
+    const rotate = deltaX * 0.1;
+    const opacity = 1 - Math.abs(deltaX) / 500;
     
     cardRef.current.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
-    
-    // Visual feedback for opacity if needed, but we'll stick to simple movement for now
+    cardRef.current.style.opacity = opacity;
   };
 
   const handlePointerUp = (e) => {
     if (!isDragging || !isTop || !cardRef.current) return;
     
     setIsDragging(false);
-    e.target.releasePointerCapture(e.pointerId);
     
-    const deltaX = e.clientX - startPos.current.x;
-    const threshold = 100; // Pixels to trigger a swipe
+    const clientX = e.clientX || e.changedTouches?.[0]?.clientX;
+    const deltaX = clientX - startPos.current.x;
+    const threshold = 100;
 
     if (Math.abs(deltaX) > threshold) {
-      // Swipe Triggered
       const direction = deltaX > 0 ? 'right' : 'left';
       const endX = direction === 'right' ? 1000 : -1000;
       
-      cardRef.current.style.transition = 'transform 0.4s ease-out';
-      cardRef.current.style.transform = `translateX(${endX}px) rotate(${deltaX * 0.05}deg)`;
+      cardRef.current.style.transition = 'all 0.5s ease-out';
+      cardRef.current.style.transform = `translateX(${endX}px) rotate(${deltaX * 0.1}deg)`;
+      cardRef.current.style.opacity = '0';
       
       setTimeout(() => {
         onSwipe(direction, data);
-      }, 200); // Wait slightly for animation to start visually
+      }, 300);
     } else {
-      // Reset (Snap back)
-      cardRef.current.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      cardRef.current.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
       cardRef.current.style.transform = 'translate(0px, 0px) rotate(0deg)';
+      cardRef.current.style.opacity = '1';
     }
   };
 
   return (
     <div
       ref={cardRef}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-      className={`absolute w-full h-full bg-white rounded-3xl shadow-xl overflow-hidden cursor-grab active:cursor-grabbing touch-none select-none border border-gray-100 ${isTop ? 'z-50' : ''}`}
-      style={style}
+      onMouseDown={handlePointerDown}
+      onMouseMove={handlePointerMove}
+      onMouseUp={handlePointerUp}
+      onMouseLeave={handlePointerUp}
+      onTouchStart={handlePointerDown}
+      onTouchMove={handlePointerMove}
+      onTouchEnd={handlePointerUp}
+      className={`absolute w-full h-full bg-gradient-to-br from-white to-gray-50 rounded-3xl overflow-hidden cursor-grab active:cursor-grabbing touch-none select-none ${isTop ? 'z-50' : ''}`}
+      style={{ ...style, boxShadow: '0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.05)', transform: style?.transform || 'translateZ(0)' }}
     >
       <div className="relative h-64 bg-gray-200 pointer-events-none">
         <img 
@@ -133,6 +133,15 @@ const SwipeableCard = ({ data, onSwipe, style, isTop }) => {
 
 // 2. Saved List Component
 const SavedList = ({ isOpen, onClose, items }) => {
+  const handleCafeClick = (cafe) => {
+    if (cafe.id) {
+      window.open(`https://www.google.com/maps/place/?q=place_id:${cafe.id}`, '_blank');
+    } else {
+      const searchQuery = encodeURIComponent(cafe.name);
+      window.open(`https://www.google.com/maps/search/?api=1&query=${searchQuery}`, '_blank');
+    }
+  };
+
   return (
     <div className={`fixed inset-0 bg-white z-[60] transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}>
       <div className="p-6 h-full flex flex-col">
@@ -143,7 +152,7 @@ const SavedList = ({ isOpen, onClose, items }) => {
           </button>
         </div>
         
-        <div className="flex-1 overflow-y-auto space-y-4">
+        <div className="flex-1 overflow-y-auto space-y-4 px-2">
           {items.length === 0 ? (
             <div className="text-center text-gray-400 mt-20">
               <Heart size={48} className="mx-auto mb-4 opacity-50" />
@@ -152,15 +161,20 @@ const SavedList = ({ isOpen, onClose, items }) => {
             </div>
           ) : (
             items.map((cafe) => (
-              <div key={cafe.id} className="flex items-center gap-4 p-3 bg-white border border-gray-100 rounded-xl shadow-sm">
-                <img src={cafe.photo} alt={cafe.name} className="w-16 h-16 rounded-lg object-cover bg-gray-200" />
-                <div>
-                  <h3 className="font-bold text-gray-800">{cafe.name}</h3>
+              <div 
+                key={cafe.id} 
+                onClick={() => handleCafeClick(cafe)}
+                className="flex items-center gap-4 p-4 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl shadow-md hover:shadow-xl transition-all cursor-pointer hover:scale-[1.02]"
+              >
+                <img src={cafe.photo} alt={cafe.name} className="w-16 h-16 rounded-lg object-cover bg-gray-200 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-gray-800 hover:text-purple-600 transition-colors truncate">{cafe.name}</h3>
                   <div className="flex items-center text-yellow-500 text-sm">
                     <Star size={14} fill="currentColor" className="mr-1" />
                     {cafe.rating}
                   </div>
                 </div>
+                <MapPin size={20} className="text-gray-400 flex-shrink-0" />
               </div>
             ))
           )}
@@ -188,7 +202,6 @@ const App = () => {
   const loadCafes = async () => {
     setLoading(true);
     if (USE_MOCK_DATA) {
-      // Simulate network delay
       setTimeout(() => {
         setCafes([...MOCK_CAFES]);
         setLoading(false);
@@ -199,50 +212,78 @@ const App = () => {
     }
   };
 
+  // Helper to format raw API results into our Card format
+  const formatCafes = (results) => {
+    return results.map(place => ({
+      id: place.place_id,
+      name: place.name,
+      rating: place.rating,
+      open_now: place.opening_hours?.open_now,
+      // Use placeholder for photos (Google Photos API requires separate handling)
+      photo: place.photos
+        ? "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80"
+        : "https://via.placeholder.com/400x300?text=No+Image"
+    }));
+  };
+
+  // Robust Fetch Logic: Vercel API -> CORS Proxy -> Mock Data
+  const fetchCafesAtLocation = async (lat, lng) => {
+    // 1. Try Vercel / Internal API
+    try {
+      const response = await fetch(`/api/cafes?lat=${lat}&lng=${lng}`);
+      // Check if response is JSON (HTML 404s can cause crashes)
+      const contentType = response.headers.get("content-type");
+      if (response.ok && contentType && contentType.indexOf("application/json") !== -1) {
+         const data = await response.json();
+         if (data.results) {
+             setCafes(formatCafes(data.results));
+             return; 
+         }
+      } else {
+        throw new Error("API route not available or didn't return JSON");
+      }
+    } catch (err) {
+      console.warn("Backend API failed (expected if running locally/preview), trying proxy...", err.message);
+    }
+
+    // 2. Fallback to Mock Data
+    console.log("Using Mock Data as fallback");
+    setCafes([...MOCK_CAFES]);
+  };
+
   const fetchNearbyCafes = async () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported");
       return;
     }
-    
-    // Simple Promise wrapper for geolocation
-    const getPos = () => new Promise((resolve, reject) => 
-      navigator.geolocation.getCurrentPosition(resolve, reject)
-    );
 
-    try {
-      const position = await getPos();
-      const { latitude, longitude } = position.coords;
-      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-      const endpoint = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=cafe&key=${GOOGLE_API_KEY}`;
-      
-      const res = await fetch(proxyUrl + endpoint);
-      const data = await res.json();
-      
-      if (data.results) {
-        const formatted = data.results.map(place => ({
-          id: place.place_id,
-          name: place.name,
-          rating: place.rating,
-          open_now: place.opening_hours?.open_now,
-          photo: place.photos 
-            ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${GOOGLE_API_KEY}`
-            : "https://via.placeholder.com/400x300?text=No+Image"
-        }));
-        setCafes(formatted);
-      }
-    } catch (err) {
-      console.error("Fetch error:", err);
-      alert("Failed to load cafes. Check console.");
+    const cache = JSON.parse(localStorage.getItem('cachedLocation') || '{}');
+    const now = Date.now();
+
+    // Cache for 10 minutes
+    if (cache.timestamp && now - cache.timestamp < 10 * 60 * 1000) {
+      await fetchCafesAtLocation(cache.lat, cache.lng);
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          localStorage.setItem('cachedLocation', JSON.stringify({ lat, lng, timestamp: now }));
+          await fetchCafesAtLocation(lat, lng);
+        },
+        (err) => {
+          console.error("Geolocation error:", err.message);
+          alert("Location access denied or unavailable. Loading demo data.");
+          setCafes([...MOCK_CAFES]);
+        }
+      );
     }
   };
 
   const handleSwipe = (direction, cafe) => {
-    // Remove the swiped card from the stack
     setCafes(prev => prev.filter(c => c.id !== cafe.id));
 
     if (direction === 'right') {
-      // Save logic
       if (!savedCafes.some(c => c.id === cafe.id)) {
         const newSaved = [...savedCafes, cafe];
         setSavedCafes(newSaved);
@@ -252,19 +293,21 @@ const App = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gray-50 flex flex-col overflow-hidden font-sans text-gray-800">
+    <div className="relative min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 flex flex-col overflow-hidden font-sans text-gray-800">
       
       {/* Header */}
       <header className="pt-8 pb-4 text-center z-10 px-4">
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <Coffee className="text-red-500" size={28} />
-          <h1 className="text-2xl font-bold tracking-tight">Cafe Finder</h1>
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <div className="p-2 bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl shadow-lg">
+            <Coffee className="text-white" size={28} />
+          </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Cafe Finder</h1>
         </div>
-        <p className="text-gray-400 text-sm">Find your next brew</p>
+        <p className="text-gray-500 text-sm font-medium">Find your next brew ☕</p>
       </header>
 
       {/* Main Card Stack Area */}
-      <main className="flex-1 flex flex-col items-center justify-start pt-6 relative">
+      <main className={`flex-1 flex flex-col items-center justify-start pt-6 relative ${showSaved ? 'hidden' : ''}`}>
         <div className="relative w-full max-w-sm h-[450px] px-4">
           
           {loading && (
@@ -292,19 +335,7 @@ const App = () => {
 
           {/* Render Stack */}
           {cafes.map((cafe, index) => {
-            // Only render the top 2 cards for performance and visual stacking
-            if (index > cafes.length - 3) return null; // Logic is actually: render ALL, but only top is interactive.
-            // Better stack logic:
-            // The last element in the array is usually "on top" in CSS unless we z-index manually.
-            // But dragging usually pops/removes elements. 
-            // Let's rely on standard array order: Index 0 is bottom, Index Length-1 is top.
-            
-            const isTop = index === 0; // We will shift() from the array, so index 0 is actually the one we interact with usually? 
-            // Wait, standard stack: 
-            // If I map: [A, B, C]. React renders A then B then C. C is on top (highest z-index naturally).
-            // So if I filter, I remove C? Or A?
-            // Let's assume index 0 is the TOP card for simplicity of data management (queue),
-            // BUT we must use z-index to force it visual top.
+            if (index > cafes.length - 3) return null; 
             
             return (
               <SwipeableCard 
@@ -315,7 +346,7 @@ const App = () => {
                 style={{ 
                   zIndex: 100 - index,
                   transform: `scale(${1 - index * 0.05}) translateY(${index * 15}px)`,
-                  opacity: index > 2 ? 0 : 1 // Hide cards deep in stack
+                  opacity: index > 2 ? 0 : 1 
                 }}
               />
             );
@@ -324,40 +355,40 @@ const App = () => {
       </main>
 
       {/* Control Bar */}
-      <div className="pb-8 px-8 w-full max-w-md mx-auto z-50">
-        <div className="flex justify-between items-center bg-white rounded-2xl shadow-xl p-2 border border-gray-100">
+      <div className={`pb-8 px-8 w-full max-w-md mx-auto z-50 ${showSaved ? 'hidden' : ''}`}>
+        <div className="flex justify-between items-center bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-3 border border-white/50" style={{boxShadow: '0 10px 40px rgba(0,0,0,0.15)'}}>
           <button 
             onClick={loadCafes}
-            className="p-4 rounded-xl text-gray-400 hover:bg-gray-50 transition-colors"
+            className="p-4 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 hover:scale-110 transition-transform shadow-lg hover:shadow-xl"
           >
-            <RotateCcw size={24} />
+            <RotateCcw size={22} />
           </button>
           
           <button 
             onClick={() => {
                 if(cafes.length > 0) handleSwipe('left', cafes[0]);
             }}
-            className="p-4 rounded-xl text-red-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+            className="p-5 rounded-2xl bg-gradient-to-br from-red-400 to-red-500 text-white hover:scale-110 transition-transform shadow-lg hover:shadow-xl"
           >
-            <X size={32} />
+            <X size={28} />
           </button>
 
           <button 
              onClick={() => {
                 if(cafes.length > 0) handleSwipe('right', cafes[0]);
             }}
-            className="p-4 rounded-xl text-green-400 hover:bg-green-50 hover:text-green-500 transition-colors"
+            className="p-5 rounded-2xl bg-gradient-to-br from-green-400 to-green-500 text-white hover:scale-110 transition-transform shadow-lg hover:shadow-xl"
           >
-            <Heart size={32} fill="currentColor" className="text-green-500/20" />
+            <Heart size={28} fill="currentColor" />
           </button>
           
           <button 
             onClick={() => setShowSaved(true)}
-            className="relative p-4 rounded-xl text-yellow-500 hover:bg-yellow-50 transition-colors"
+            className="relative p-4 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-500 text-white hover:scale-110 transition-transform shadow-lg hover:shadow-xl"
           >
-            <Star size={24} fill={savedCafes.length > 0 ? "currentColor" : "none"} />
+            <Star size={22} fill={savedCafes.length > 0 ? "currentColor" : "none"} />
             {savedCafes.length > 0 && (
-              <span className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
             )}
           </button>
         </div>
@@ -370,10 +401,9 @@ const App = () => {
         items={savedCafes} 
       />
 
-      {/* Global Style overrides for specific swipe hint visibility logic */}
+      {/* Global Style overrides */}
       <style>{`
         .swipe-hint-right, .swipe-hint-left { opacity: 0; }
-        /* Simple logic: we rely on JS to rotate, but here we can add helper classes if we wanted */
       `}</style>
     </div>
   );
