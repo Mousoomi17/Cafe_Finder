@@ -1,6 +1,78 @@
-☕ Cafe FinderA React-based web application that helps users discover nearby cafes using a Tinder-like swipe interface. Users can swipe right to save their favorite spots and swipe left to pass.Cafe Finder✨ FeaturesNearby Discovery: Automatically locates cafes within a 1.5km radius using the Google Places API.Swipe Interface: Intuitive card-based UI where users swipe right to "Like" (save) and left to "Pass".Saved Favorites: View a list of all your saved cafes.Responsive Design: Fully optimized for mobile and desktop devices using Tailwind CSS.Real-time Data: Displays ratings, opening status, and photos directly from Google Maps.🚀 Getting StartedPrerequisitesNode.js (v14 or higher)npm (v6 or higher)A Google Maps API Key with Places API enabled.InstallationClone the repository:git clone [https://github.com/yourusername/cafe-finder.git](https://github.com/yourusername/cafe-finder.git)
+
+# ☕ Cafe Finder
+
+A **React-based web application** that helps users discover nearby cafes using a Tinder-like swipe interface. Users can swipe right to save their favorite spots and swipe left to pass.
+
+## ✨ Features
+
+* **Nearby Discovery:** Automatically locates cafes within a 1.5km radius using the **Google Places API**.
+* **Swipe Interface:** Intuitive card-based UI where users swipe right to "Like" (save) and left to "Pass".
+* **Saved Favorites:** View a curated list of all your saved cafes.
+* **Responsive Design:** Fully optimized for mobile and desktop devices using **Tailwind CSS**.
+* **Real-time Data:** Displays ratings, opening status, and photos directly from Google Maps.
+
+---
+
+## 🚀 Getting Started
+
+Follow these instructions to get the project up and running on your local machine.
+
+### Prerequisites
+
+* **Node.js** (v14 or higher)
+* **npm** (v6 or higher)
+* **Google Maps API Key** with the *Places API* enabled.
+
+### Installation
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/yourusername/cafe-finder.git
 cd cafe-finder
-Install dependencies:npm install
-Start the development server:npm start
-🔑 API ConfigurationThis project uses the Google Maps Places API. You need to configure your API key for both the frontend (images) and the backend (search results).1. Local DevelopmentOpen src/App.js and replace the placeholder with your API key:const HARDCODED_KEY = "YOUR_ACTUAL_GOOGLE_API_KEY";
-Note: For local development, you may need to use a CORS proxy if you encounter CORS errors. The app includes a built-in fallback to cors-anywhere.herokuapp.com for this purpose.2. Deployment (Vercel)To deploy securely on Vercel, you must set up Environment Variables:Go to your Vercel Project Settings > Environment Variables.Add the following two variables (using the same API key for both):Variable NameValuePurposeGOOGLE_API_KEYAIza...Used by serverless functions to fetch cafe data securely.REACT_APP_GOOGLE_API_KEYAIza...Used by the React frontend to load cafe images.Redeploy your project for the changes to take effect.🛠️ Tech StackFrontend: React 18, Tailwind CSSIcons: Lucide ReactAPI: Google Maps Places APIDeployment: Vercel (Serverless Functions)
+
+```
+
+
+2. **Install dependencies:**
+```bash
+npm install
+
+```
+
+
+3. **Start the development server:**
+```bash
+npm start
+
+```
+
+
+
+---
+
+## 🔑 API Configuration
+
+This project uses the **Google Maps Places API**. You need to configure your API key for both the frontend (images) and the backend (search results).
+
+### 1. Local Development
+
+Open `src/App.js` and replace the placeholder with your actual API key:
+
+```javascript
+const HARDCODED_KEY = "YOUR_ACTUAL_GOOGLE_API_KEY";
+
+```
+
+> **Note on CORS:** For local development, you may encounter CORS errors since the Google Places API does not natively support client-side requests from localhost. The app includes a built-in fallback to `cors-anywhere.herokuapp.com` for this purpose.
+
+### 2. Deployment (Vercel)
+
+To deploy on Vercel:
+
+1. Push your code to GitHub.
+2. Import the project into Vercel.
+3. Add your API Key as an **Environment Variable** in the Vercel dashboard settings to keep it secure.
+
+---
+
+**Would you like me to generate a `package.json` file snippet or a `.env` configuration guide to go along with this?**
