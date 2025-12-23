@@ -11,9 +11,8 @@ A **React-based web application** that helps users discover nearby cafes using a
 * **Interactive Mapping:** Full integration with Google Maps for visual navigation.
 * **Swipe Interface:** Intuitive card-based UI where users swipe right to "Like" (save) and left to "Pass".
 * **Saved Favorites:** View a curated list of all your saved cafes.
-* **Responsive Design:** Fully optimized for mobile and desktop devices using **Tailwind CSS**.
+* **Responsive Design:** Fully optimized for mobile and desktop devices using Tailwind CSS.
 * **Real-time Data:** Displays ratings, opening status, and photos directly from Google Maps.
-* **Mobile-First Design:** Fully responsive UI built to work perfectly on smartphones and desktops.
 
 ---
 
