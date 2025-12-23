@@ -15,7 +15,6 @@ A **React-based web application** that helps users discover nearby cafes using a
 
 ## 🚀 Getting Started
 
-Follow these instructions to get the project up and running on your local machine.
 
 ### Prerequisites
 
